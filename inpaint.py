@@ -1,43 +1,26 @@
-!git clone https://github.com/saic-mdal/lama.git
+"""
+To run this file please clone the LAMA repository
 
-print('\n> Install dependencies')
-!pip install torch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 torchtext==0.9
-!pip install -r lama/requirements.txt --quiet
-!pip install wget --quiet
-!pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html --quiet
+git clone https://github.com/saic-mdal/lama.git
 
 
-print('\n> Changing the dir to:')
-%cd /content/lama
+Change your directory to lama
 
-print('\n> Download the model')
+cd /content/lama
+
+Download the trained model
+
 !curl -L $(yadisk-direct https://disk.yandex.ru/d/ouP6l8VJ0HpMZg) -o big-lama.zip
 !unzip big-lama.zip
 
-print('>fixing opencv')
-!pip uninstall opencv-python-headless -y --quiet
-!pip install opencv-python-headless==4.1.2.30 --quiet
+"""
 
+import cv2
+from os.path import exists
 
-from IPython.display import HTML, Image
-from google.colab.output import eval_js
-from base64 import b64decode
-import matplotlib.pyplot as plt
-import numpy as np
-import wget
-from shutil import copyfile
-
-
-
-canvas_html = ""
-
-def draw(imgm, filename='drawing.png', w=400, h=200, line_width=1):
-  display(HTML(canvas_html % (w, h, w,h, filename.split('.')[-1], imgm, line_width)))
-  data = eval_js("data")
-  binary = b64decode(data.split(',')[1])
-  with open(filename, 'wb') as f:
-    f.write(binary)
-
+import torch
+import torchvision.transforms as transforms
+import torchvision
 
 def get_number_for_ds(num):
   if num > 0 and num < 10:
@@ -51,28 +34,45 @@ def get_number_for_ds(num):
   else:
     return str(num)
   
-for i in range(1000,2000):
-  masked_src = '/content/drive/MyDrive/whole_masked/'+str(i)+'.jpg'
-  file_exists = exists(masked_src)
-  if file_exists:
-    img_name = get_number_for_ds(i+1)
-    fname = './data_for_prediction/'+img_name+'.jpg'
 
-    print('Run inpainting')
-    if '.jpeg' in fname:
-      !PYTHONPATH=. TORCH_HOME=$(pwd) python3 bin/predict.py model.path=$(pwd)/big-lama indir=$(pwd)/data_for_prediction outdir=/content/output dataset.img_suffix=.jpeg > /dev/null
-    elif '.jpg' in fname:
-      !PYTHONPATH=. TORCH_HOME=$(pwd) python3 bin/predict.py model.path=$(pwd)/big-lama indir=$(pwd)/data_for_prediction outdir=/content/output  dataset.img_suffix=.jpg > /dev/null
-    elif '.png' in fname:
-      !PYTHONPATH=. TORCH_HOME=$(pwd) python3 bin/predict.py model.path=$(pwd)/big-lama indir=$(pwd)/data_for_prediction outdir=/content/output  dataset.img_suffix=.png > /dev/null
-    else:
-      print(f'Error: unknown suffix .{fname.split(".")[-1]} use [.png, .jpeg, .jpg]')
+def inpaint_images_with_lama(dataset_size, source_patched_images_folder, destination_folder):
+    """
+        Inpainting code is mostly taken from https://github.com/advimman/lama .
+    """
+    for i in range(dataset_size):
+        masked_src = source_patched_images_folder+str(i)+'.jpg'
+        file_exists = exists(masked_src)
+        if file_exists:
+            img_name = get_number_for_ds(i+1)
+            fname = './data_for_prediction/'+img_name+'.jpg'
 
-    plt.rcParams['figure.dpi'] = 200
-    plt.imshow(plt.imread(f"/content/output/{fname.split('.')[1].split('/')[2]}_mask.png"))
-    _=plt.axis('off')
-    _=plt.title('inpainting result')
-    #plt.show()
-    inpainted_im = cv2.imread(f"/content/output/{fname.split('.')[1].split('/')[2]}_mask.png")
-    cv2.imwrite("/content/drive/MyDrive/inpaint_result/"+img_name+'.png', inpainted_im)
-    fname = None
+            print('Run inpainting')
+            if '.jpeg' in fname:
+                !PYTHONPATH=. TORCH_HOME=$(pwd) python3 bin/predict.py model.path=$(pwd)/big-lama indir=$(pwd)/data_for_prediction outdir=/content/output dataset.img_suffix=.jpeg > /dev/null
+            elif '.jpg' in fname:
+                !PYTHONPATH=. TORCH_HOME=$(pwd) python3 bin/predict.py model.path=$(pwd)/big-lama indir=$(pwd)/data_for_prediction outdir=/content/output  dataset.img_suffix=.jpg > /dev/null
+            elif '.png' in fname:
+                !PYTHONPATH=. TORCH_HOME=$(pwd) python3 bin/predict.py model.path=$(pwd)/big-lama indir=$(pwd)/data_for_prediction outdir=/content/output  dataset.img_suffix=.png > /dev/null
+            else:
+                print(f'Error: unknown suffix .{fname.split(".")[-1]} use [.png, .jpeg, .jpg]')
+
+            inpainted_im = cv2.imread(f"/content/output/{fname.split('.')[1].split('/')[2]}_mask.png")
+            cv2.imwrite(destination_folder+img_name+'.png', inpainted_im)
+            fname = None
+
+transform = transforms.Compose(
+    [transforms.Resize((256, 256)),
+    transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+batch_size = 4
+
+trainset = torchvision.datasets.StanfordCars(root='./data', split='train',
+                                        download=True, transform=transform)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                          shuffle=True, num_workers=2)
+
+
+dataset_size = len(trainset)
+source_patched_images_folder = ""
+destination_folder = ""
+inpaint_images_with_lama(dataset_size, source_patched_images_folder, destination_folder)
