@@ -30,3 +30,19 @@ References
   howpublished = {\url{https://github.com/utkuozbulak/pytorch-cnn-visualizations}},
   commit = {b7e60adaf64c9be97b480509285718603d1e9ba4}
 }
+
+@misc{alaluf2021hyperstyle,
+      title={HyperStyle: StyleGAN Inversion with HyperNetworks for Real Image Editing}, 
+      author={Yuval Alaluf and Omer Tov and Ron Mokady and Rinon Gal and Amit H. Bermano},
+      year={2021},
+      eprint={2111.15666},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+@article{suvorov2021resolution,
+  title={Resolution-robust Large Mask Inpainting with Fourier Convolutions},
+  author={Suvorov, Roman and Logacheva, Elizaveta and Mashikhin, Anton and Remizova, Anastasia and Ashukha, Arsenii and Silvestrov, Aleksei and Kong, Naejin and Goka, Harshith and Park, Kiwoong and Lempitsky, Victor},
+  journal={arXiv preprint arXiv:2109.07161},
+  year={2021}
+}
