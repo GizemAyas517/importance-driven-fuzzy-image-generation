@@ -1,5 +1,3 @@
-#@title Run this sell to set everything up
-print('\n> Cloning the repo')
 !git clone https://github.com/saic-mdal/lama.git
 
 print('\n> Install dependencies')
@@ -21,8 +19,6 @@ print('>fixing opencv')
 !pip install opencv-python-headless==4.1.2.30 --quiet
 
 
-print('\n> Init mask-drawing code')
-import base64, os
 from IPython.display import HTML, Image
 from google.colab.output import eval_js
 from base64 import b64decode
@@ -30,7 +26,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import wget
 from shutil import copyfile
-import shutil
 
 
 

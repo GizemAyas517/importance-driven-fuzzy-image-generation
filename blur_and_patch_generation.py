@@ -1,6 +1,8 @@
 import torchvision.transforms as transforms
 import torchvision
 import torch
+import cv2
+import numpy as np
 
 # LOAD STANFORD CARS DATASET
 
@@ -20,11 +22,7 @@ testset = torchvision.datasets.StanfordCars(root='./data', split='test',
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2)
 
-import cv2
-import numpy as np
-from google.colab.patches import cv2_imshow
-import time
-
+# find_w_h finds the location of the patch on the image
 def find_w_h(image_size, x, y, box_size):
   start_w = x-(box_size/2)
   start_h = y-(box_size/2)
@@ -43,6 +41,12 @@ def find_w_h(image_size, x, y, box_size):
   return int(start_w), int(start_h), int(final_w), int(final_h)
 
 no_img_ind = []
+
+"""
+ generate_blur_important generates a blur patch on the important regions of the given image
+ in location original_image_src and saves new image with the patch as a new file to save_location
+"""
+
 def generate_blur_important(heatmap_img_src, original_image_src, save_location, ind):
   img=cv2.imread(heatmap_img_src)
   img_hsv=cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -58,7 +62,6 @@ def generate_blur_important(heatmap_img_src, original_image_src, save_location, 
   mask1 = cv2.inRange(img_hsv, lower_red, upper_red)
 
   # join my masks
-  #mask = mask0+mask1
   mask = mask0+mask1
 
   # set my output img to zero everywhere except my mask
@@ -136,23 +139,28 @@ def generate_blur_important(heatmap_img_src, original_image_src, save_location, 
         # Insert ROI back into image
         resized[h1:h2, w1:w2] = blur
 
-    # cv2_imshow(resized)
       filename="blurred"
       cv2.imwrite(save_location+filename+str(ind)+".jpg", resized)
     except:
       no_img_ind.append(ind)
       print("error for "+str(ind))
 
+def get_number_for_ds(num):
+  if num > 0 and num < 10:
+    return "0000"+str(num)
+  elif num >=10 and num < 100:
+    return "000"+str(num)
+  elif num >= 100 and num < 1000:
+    return "00"+str(num)
+  elif num >=1000 and num < 10000:
+    return "0"+str(num)
+  else:
+    return str(num)
 
-#original_image_src = '/content/drive/MyDrive/car_imgs/class_car/00001.jpg'
-#my_im = cv2.imread(original_image_src)
-dim = (288, 288)
-blank_image = np.zeros([288,288,3],dtype=np.uint8)
-#blank_image.fill(255) # or img[:] = 255
-cv2.imwrite("blank.jpg", blank_image)
-resized = cv2.resize(blank_image, dim, interpolation = cv2.INTER_AREA)
-w1, h1, w2, h2 = find_w_h(288, 100, 100, 50)
-cv2.rectangle(resized, (w1, h1), (w2, h2), (255,255,255), -1)
-save_location='/content/out/'
-filename="masked"
-cv2.imwrite("gizem.jpg", resized)
+
+
+for i in range(len(trainset)):
+  heatmap_img_src = '/content/drive/MyDrive/car_heatmaps/'+str(i)+'_out.png'
+  save_location = '/content/drive/MyDrive/important_blurred/'
+  original_image_src = '/content/data/stanford_cars/cars_train/'+get_number_for_ds(i+1)+'.jpg'
+  generate_blur_important(heatmap_img_src, original_image_src, save_location, i)

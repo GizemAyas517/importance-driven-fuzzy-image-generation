@@ -1,21 +1,9 @@
-import sys
-
-sys.path.append('../')
-
 import numpy as np
 from keras import models
 from collections import defaultdict
-from keras.datasets import cifar10
-from keras.utils import np_utils
-from keras.models import model_from_json, load_model, save_model
-from __future__ import print_function
-from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
-from keras import optimizers
-from keras.layers.core import Lambda
-from keras import backend as K
 from keras import regularizers
 from PIL import Image
 
@@ -262,7 +250,6 @@ for i in range(max_range_start,max_range_end):
 # CALCULATE COVERAGE
 
 predictions = get_layer_outs_new(model, np.array(generated_images))
-
 
 nc = NeuronCoverage(model, threshold=.25, skip_layers = skip_layers, predictions=predictions)
 coverage, covered1, total, _, _, coverage_arr = nc.test(np.array(generated_images))
