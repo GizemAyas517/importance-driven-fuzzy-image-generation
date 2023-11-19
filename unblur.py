@@ -15,10 +15,6 @@ from utils.model_utils import load_model
     Clone the repository from https://github.com/yuval-alaluf/hyperstyle.git
 """
 
-path_to_model = "/content/.../hyperstyle_cars.pt"
-path_to_w_encoder = "/content/.../cars_w_encoder.pt"
-dataset_path = "/content/.../whole_blurred/"
-
 def unblur_with_hyperstyle(dataset_path, destination_path):
   EXPERIMENT_DATA_ARGS = {
       "cars": {
